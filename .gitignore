@@ -1,0 +1,10 @@
+.DS_Store
+node_modules
+npm-debug.log
+.idea
+test/unit/coverage
+.coveralls.yml
+.flowconfig
+docs/gitbook/_book
+docs/node_modules
+site
