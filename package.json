@@ -1,5 +1,5 @@
 {
-  "name": "vue-select",
+  "name": "custom-vue-select",
   "version": "2.4.0",
   "description": "A native Vue.js component that provides similar functionality to Select2 without the overhead of jQuery.",
   "author": "Jeff Sagal <sagalbot@gmail.com>",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sagalbot/vue-select.git"
+    "url": "https://github.com/ksaetern03/custom-vue-select.git"
   },
   "peerDependencies": {
     "vue": "2.x"

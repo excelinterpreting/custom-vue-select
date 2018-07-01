@@ -1,5 +1,5 @@
 {
-  "title": "vue-select",
+  "title": "custom-vue-select",
   "gitbook": ">3.0.0",
   "root": "./docs/gitbook",
   "plugins": ["edit-link", "-fontsettings", "codepen", "include-csv"],
@@ -9,7 +9,7 @@
       "label": "Edit This Page"
     },
     "github": {
-      "url": "https://github.com/sagalbot/vue-select/"
+      "url": "https://github.com/ksaetern03/custom-vue-select.git"
     },
     "codepen": {
       "theme": 32252
