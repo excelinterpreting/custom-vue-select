@@ -18,6 +18,7 @@ module.exports = {
      * @return {void}
      */
     typeAheadUp() {
+      //console.log(this.typeAheadPointer);
       if (this.typeAheadPointer > 0) {
         this.typeAheadPointer--
         if( this.maybeAdjustScroll ) {
@@ -32,6 +33,7 @@ module.exports = {
      * @return {void}
      */
     typeAheadDown() {
+      //console.log(this.typeAheadPointer);
       if (this.typeAheadPointer < this.filteredOptions.length - 1) {
         this.typeAheadPointer++
         if( this.maybeAdjustScroll ) {

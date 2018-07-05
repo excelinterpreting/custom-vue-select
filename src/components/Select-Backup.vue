@@ -202,7 +202,7 @@
     outline: none;
     margin: 0;
     padding: 0 .5em;
-    width: 100% !important;
+    width: 10em;
     max-width: 100%;
     background: none;
     position: relative;
@@ -310,25 +310,26 @@
 </style>
 
 <template>
-  <div :dir="dir" ref="vselect" class="dropdown v-select" :class="dropdownClasses">
-    <div ref="toggle" :class="['dropdown-toggle', 'clearfix']">
+  <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
+    <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix']">
 
-<!--       <slot v-for="option in valueAsArray" name="selected-option-container"
-            :option="(typeof option === 'object')?option:{[label]: option}" :deselect="deselect" :multiple="multiple" :disabled="disabled">
-        <span class="selected-tag" v-bind:key="option.index">
-          <slot name="selected-option" v-bind="(typeof option === 'object')?option:{[label]: option}">
-            {{ getOptionLabel(option) }}
-          </slot>
-          <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </span>
-    </slot> -->
+<!--   <slot v-for="option in valueAsArray" name="selected-option-container"
+        :option="(typeof option === 'object')?option:{[label]: option}" :deselect="deselect" :multiple="multiple" :disabled="disabled">
+    <span class="selected-tag" v-bind:key="option.index">
+      <slot name="selected-option" v-bind="(typeof option === 'object')?option:{[label]: option}">
+        {{ getOptionLabel(option) }}
+      </slot>
+      <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </span>
+  </slot> -->
 
       <input
               ref="search"
               v-model="search"
               @keydown.delete="maybeDeleteValue"
+              @keyup.esc="onEscape"
               @keydown.up.prevent="typeAheadUp"
               @keydown.down.prevent="typeAheadDown"
               @keydown.enter.prevent="typeAheadSelect"
@@ -336,7 +337,6 @@
               @blur="onSearchBlur"
               @focus="onSearchFocus"
               @keyup="onSearchKeyUp"
-              @click="toggleDropdown"
               type="search"
               class="form-control"
               autocomplete="off"
@@ -350,17 +350,17 @@
       >
 
 <!--       <button 
-        v-show="showClearButton" 
-        :disabled="disabled" 
-        @click="clearSelection"
-        type="button" 
-        class="clear" 
-        title="Clear selection" 
-      >
-        <span aria-hidden="true">&times;</span>
-      </button> -->
+  v-show="showClearButton" 
+  :disabled="disabled" 
+  @click="clearSelection"
+  type="button" 
+  class="clear" 
+  title="Clear selection" 
+>
+  <span aria-hidden="true">&times;</span>
+</button> -->
 
-      <i v-if="!noDrop" @click="clickDropdown" role="presentation" class="open-indicator"></i>
+      <i v-if="!noDrop" ref="openIndicator" @click="openDropDown" role="presentation" class="open-indicator"></i>
 
       <slot name="spinner">
         <div class="spinner" v-show="mutableLoading">Loading...</div>
@@ -531,6 +531,7 @@
             }
             if (this.label && option[this.label]) {
               return option[this.label]
+              //this.search = option.label
             }
           }
           return option;
@@ -691,10 +692,8 @@
         open: false,
         mutableValue: null,
         mutableOptions: [],
-        countKeyup: 0, //count click
-        arrowClicked: false,  //track dropdown clicked
-        keyPressed: '',  //track keypress
-        checkBlur: false  //track of input field is still active
+        selectedValue: '',
+        arrowClicked: false, //keep track of opening of dropdown when arrow is clicked
       }
     },
 
@@ -797,11 +796,6 @@
           }
         }
 
-        console.log("select")
-        this.arrowClicked = false   // set arrowClicked to false
-        this.countKeyup = 0 //reset keyup counter
-        this.checkBlur = false
-        this.open = false
         this.onAfterSelect(option)
       },
 
@@ -840,7 +834,7 @@
        */
       onAfterSelect(option) {
         if (this.closeOnSelect) {
-          //this.open = !this.open
+          this.open = !this.open
           this.$refs.search.blur()
 
           if(typeof this.mutableValue !== 'undefined' && typeof this.mutableValue === 'object'){
@@ -878,72 +872,30 @@
        * @return {void}
        */
       toggleDropdown(e) {
-        console.log("toggle Dropdown")
-        if (!this.disabled && !this.taggable) {
-          console.log("toggleDropdown disabled and not taggle")
-          this.open = true           // open dropdown
-          this.arrowClicked = true   // show all options
-          this.$refs.search.focus()  // set clicked input active/focused
-        }
-
-        // taggle don't open drop down on toggle
-        if (this.taggable) {
-          console.log("toggleDropdown taggable")
-          this.open = false
-
-          if(this.arrowClicked){
-            this.arrowClicked = false
-          }
-
-          this.$refs.search.focus()
-        }
-        //console.log(e)
-        //console.log("open: "+this.open)
-/*        if (e.target === this.$refs.search || e.target === this.$refs.toggle || e.target === this.$el) {
+        //console.log("toggle")
+        if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle || e.target === this.$el) {
           if (this.open) {
             this.$refs.search.blur() // dropdown will close on blur
           } else {
-            if (!this.disabled && !this.taggable) {
-              console.log("toggleDropdown disabled and not taggle")
-              this.open = true           // open dropdown
-              this.arrowClicked = true   // show all options
-              this.$refs.search.focus()  // set clicked input active/focused
-            }
-
-            // taggle don't open drop down on toggle
-            if (this.taggable) {
-              console.log("toggleDropdown taggable")
-              this.open = false
+            if (!this.disabled) {
+              this.open = true
               this.$refs.search.focus()
             }
           }
-        }*/
+        }
       },
 
-      /**
-       * Toggle the visibility of the dropdown menu.
-       * @param  {Event} e
-       * @return {void}
-       */
-      clickDropdown(e) {
-        console.log("click Dropdown")
-        console.log("this.open = "+this.open)
-        console.log("this.arrowClicked = "+this.arrowClicked)
+
+      openDropDown(){
+        console.log("open drop down")
         this.open = !this.open
-        this.arrowClicked= !this.arrowClicked
-/*        if(this.blur && !this.open && !this.arrowClicked){
-          this.open = true
+
+        if(this.open){
           this.arrowClicked = true
-          this.$refs.search.focus()
-        } else if(!this.open && !this.arrowClicked) {
-          this.checkBlur = false
-          this.open = true
-          this.arrowClicked = true
+          //this.search = "";
         } else {
-          this.checkBlur = false
-          this.open = false
           this.arrowClicked = false
-        }*/
+        }
       },
 
       /**
@@ -952,18 +904,11 @@
        * @return {void}
        */
       documentClick(e){
-        let el = this.$refs.vselect
+        let el = this.$refs.dropdownMenu
         let target = e.target
-        //console.log(e.target);
         if(typeof el !== 'undefined'){
           if ( (el !== target) && !el.contains(target)) {
-            this.arrowClicked = false
-            this.open = false
-            this.countKeyup = 0
-            //console.log("document clicked outside")
-          } else {
-            //this.arrowClicked = false
-            //console.log("clicked inside")
+            this.open=false
           }
         }
       },
@@ -998,15 +943,13 @@
        * @return {void}
        */
       onEscape() {
-        //console.log("onEscape")
+        //console.log("onEscpae")
         if (!this.search.length) {
-          //console.log("blank")
+          //console.log("onEscpae")
           this.$refs.search.blur()
         } else {
           //this.search = ''
         }
-
-        this.$emit('search:focus')
       },
 
       /**
@@ -1018,7 +961,7 @@
         console.log("onSearchBlur")
         if (this.clearSearchOnBlur) {
           //this.search = ''
-          //console.log("onSearchBlur")
+          console.log("onSearchBlur")
         }
         this.open = false
         this.arrowClicked = false
@@ -1031,46 +974,10 @@
        * @return {void}
        */
       onSearchFocus() {
-/*        if(this.arrowClicked){
-          console.log("onSearchFocus arrowClicked is true")
-          if(!this.taggable) {
-            this.$emit('search:focus')
-          }
-          this.open = true
-        } else {
-          if(!this.taggable){
-            console.log("onSearchFocus open")
-            this.open = true
-            this.arrowClicked = true //show all options
-          } else {
-            this.open = false
-            this.arrowClicked = false
-          }
-        }*/
-
-
-        if(this.taggable){
-          if(this.arrowClicked){
-            this.open = true
-          } else {
-            this.open = false
-          }
-          //this.arrowClicked = !this.arrowClicked
-          //this.$emit('search:focus')
-        } else {
-          //console.log("onSearchFocus not taggable")
-
-          if(this.arrowClicked){
-            this.open = true
-            this.arrowClicked = true
-          } else {
-            this.open = false
-            this.arrowClicked = false
-          }
-          //this.open = true
-          //this.arrowClicked = true  //this will show all options
-          this.$emit('search:focus')
-        }
+        console.log("on search focus")
+        this.open = true
+        this.arrowClicked = true
+        //this.$emit('search:focus')
       },
 
       /**
@@ -1079,43 +986,26 @@
        * @return {void}
        */
       onSearchKeyUp(e) {
+        console.log("on search key up")
         var ctrlDown = false
-        var ctrlKey = 17  //control
-        var comKey = 91  //control
-        var cKey = 67     // c
-        var saveKeyPressed = this.keyPressed
-        var nextKeyPressed = e.keyCode
+        var ctrlKey = 17
+        var cKey = 67
 
-        this.keyPressed = nextKeyPressed
-        this.countKeyup = this.countKeyup+1
-
-        //console.log(e)
-        //console.log(this.countKeyup)
-
-/*        console.log(e.keyCode);
-        if(e.keyCode == comKey || e.keyCode == ctrlKey){
-          if(e.keyCode == cKey){
-            console.log("copy")
-            ctrlDown = true
-          }
+        if(e.keyCode == ctrlKey){
+          ctrlDown = true
         }
 
-        if(ctrlDown === false){
-          console.log("Not copying")
+        if(ctrlDown === false && e.keyCode !== cKey){
           this.open = true
-          this.arrowClicked = false
-        }*/
-        if(this.countKeyup > 0){
-          this.open = true
-          //this.arrowClicked = false
         }
         //this.$emit('search:focus')
+      },
 
-/*        if(ctrlDown === false){
-          console.log("Not copying")
-          this.open = true
-          this.arrowClicked = false
-        }*/
+      /**
+       * Using tab key for selection
+       */
+      onTabKey(e){
+        console.log("tab pressed");
       },
 
       /**
@@ -1206,6 +1096,7 @@
        * @return {Boolean} True if open
        */
       dropdownOpen() {
+        console.log(this.open)
         return this.noDrop ? false : this.open && !this.mutableLoading
       },
 
@@ -1232,51 +1123,21 @@
         if (!this.filterable && !this.taggable) {
           return this.mutableOptions.slice()
         }
-        //var options = this.mutableOptions
 
         var options
 
-        console.log("search length: "+this.search.length)
-
         if(this.arrowClicked){
-          if(this.taggable){
-            options = this.mutableOptions;
-          } 
-
-          if(!this.taggable && this.countKeyup === 0) {
-            options = this.mutableOptions;
-          } else if (!this.taggable && this.countKeyup > 0){
-            options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-          }
+          options = this.mutableOptions;
         } else {
           options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
           //var options = this.mutableOptions;
           
-/*          if (this.taggable && this.search.length && !this.optionExists(this.search)) {
+          if (this.taggable && this.search.length && !this.optionExists(this.search)) {
             options.unshift(this.search)
-          }*/
+          }
 
         }
 
-/*        if(this.arrowClicked){
-          if(this.taggable){
-            options = this.mutableOptions
-          } else {
-            options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-          }
-        } else {
-          if(this.taggable){
-            options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-          } else {
-            options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-            //var options = this.mutableOptions;
-            
-            if (this.taggable && this.search.length && !this.optionExists(this.search)) {
-              options.unshift(this.search)
-            }
-
-          }
-        }*/
 
         return options
       },

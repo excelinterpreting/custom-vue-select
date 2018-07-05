@@ -1,7 +1,7 @@
 <style>
   .v-select {
     position: relative;
-    font-family: inherit;
+    font-family: sans-serif;
   }
 
   .v-select,
@@ -146,7 +146,6 @@
     padding: 1px 0.25em;
     float: left;
     line-height: 24px;
-    z-index: 999999999999999;
   }
   .v-select.single .selected-tag {
     background-color: transparent;
@@ -177,7 +176,7 @@
     opacity: .2;
   }
   .v-select.single.searching:not(.open):not(.loading) input[type="search"] {
-    opacity: 1;
+    opacity: .2;
   }
   /* Search Input */
   .v-select input[type="search"]::-webkit-search-decoration,
@@ -202,7 +201,7 @@
     outline: none;
     margin: 0;
     padding: 0 .5em;
-    width: 100% !important;
+    width: 10em;
     max-width: 100%;
     background: none;
     position: relative;
@@ -310,36 +309,31 @@
 </style>
 
 <template>
-  <div :dir="dir" ref="vselect" class="dropdown v-select" :class="dropdownClasses">
-    <div ref="toggle" :class="['dropdown-toggle', 'clearfix']">
+  <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
+    <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix']">
 
-<!--       <slot v-for="option in valueAsArray" name="selected-option-container"
-            :option="(typeof option === 'object')?option:{[label]: option}" :deselect="deselect" :multiple="multiple" :disabled="disabled">
-        <span class="selected-tag" v-bind:key="option.index">
-          <slot name="selected-option" v-bind="(typeof option === 'object')?option:{[label]: option}">
-            {{ getOptionLabel(option) }}
-          </slot>
-          <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </span>
-    </slot> -->
+      <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
+        <slot name="selected-option" v-bind="option">
+          {{ getOptionLabel(option) }}
+        </slot>
+        <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </span>
 
       <input
               ref="search"
               v-model="search"
               @keydown.delete="maybeDeleteValue"
+              @keyup.esc="onEscape"
               @keydown.up.prevent="typeAheadUp"
               @keydown.down.prevent="typeAheadDown"
               @keydown.enter.prevent="typeAheadSelect"
-              @keydown.tab.prevent="typeAheadSelect"
               @blur="onSearchBlur"
               @focus="onSearchFocus"
-              @keyup="onSearchKeyUp"
-              @click="toggleDropdown"
               type="search"
               class="form-control"
-              autocomplete="off"
+              autocomplete="false"
               :disabled="disabled"
               :placeholder="searchPlaceholder"
               :tabindex="tabindex"
@@ -349,7 +343,7 @@
               aria-label="Search for option"
       >
 
-<!--       <button 
+      <button 
         v-show="showClearButton" 
         :disabled="disabled" 
         @click="clearSelection"
@@ -358,9 +352,9 @@
         title="Clear selection" 
       >
         <span aria-hidden="true">&times;</span>
-      </button> -->
+      </button>
 
-      <i v-if="!noDrop" @click="clickDropdown" role="presentation" class="open-indicator"></i>
+      <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
 
       <slot name="spinner">
         <div class="spinner" v-show="mutableLoading">Loading...</div>
@@ -371,7 +365,7 @@
       <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
         <li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
           <a @mousedown.prevent="select(option)">
-          <slot name="option" v-bind="(typeof option === 'object')?option:{[label]: option}">
+          <slot name="option" v-bind="option">
             {{ getOptionLabel(option) }}
           </slot>
           </a>
@@ -427,15 +421,6 @@
       },
 
       /**
-       * Can the user clear the selected property?
-       * @type {Boolean}
-       */
-      clearable: {
-        type: Boolean,
-        default: true
-      },
-
-      /**
        * Sets the max-height property on the dropdown list.
        * @deprecated
        * @type {String}
@@ -488,7 +473,7 @@
        */
       clearSearchOnSelect: {
         type: Boolean,
-        default: false
+        default: true
       },
 
       /**
@@ -522,13 +507,6 @@
         type: Function,
         default(option) {
           if (typeof option === 'object') {
-            if (!option.hasOwnProperty(this.label)) {
-              return console.warn(
-                `[vue-select warn]: Label key "option.${this.label}" does not` +
-                ` exist in options object ${JSON.stringify(option)}.\n` +
-                'http://sagalbot.github.io/vue-select/#ex-labels'
-              )
-            }
             if (this.label && option[this.label]) {
               return option[this.label]
             }
@@ -591,47 +569,6 @@
       },
 
       /**
-       * Callback to determine if the provided option should
-       * match the current search text. Used to determine
-       * if the option should be displayed.
-       * @type   {Function}
-       * @param  {Object || String} option
-       * @param  {String} label
-       * @param  {String} search
-       * @return {Boolean}
-       */
-      filterBy: {
-        type: Function,
-        default(option, label, search) {
-          return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1
-        }
-      },
-
-      /**
-       * Callback to filter results when search text
-       * is provided. Default implementation loops
-       * each option, and returns the result of
-       * this.filterBy.
-       * @type   {Function}
-       * @param  {Array} list of options
-       * @param  {String} search text
-       * @param  {Object} vSelect instance
-       * @return {Boolean}
-       */
-      filter: {
-        "type": Function,
-        default(options, search) {
-          return options.filter((option) => {
-            let label = this.getOptionLabel(option)
-            if (typeof label === 'number') {
-              label = label.toString()
-            }
-            return this.filterBy(option, label, search)
-          });
-        }
-      },
-
-      /**
        * User defined function for adding Options
        * @type {Function}
        */
@@ -690,11 +627,7 @@
         search: '',
         open: false,
         mutableValue: null,
-        mutableOptions: [],
-        countKeyup: 0, //count click
-        arrowClicked: false,  //track dropdown clicked
-        keyPressed: '',  //track keypress
-        checkBlur: false  //track of input field is still active
+        mutableOptions: []
       }
     },
 
@@ -767,14 +700,6 @@
       this.$on('option:created', this.maybePushTag)
     },
 
-    mounted(){
-      document.addEventListener('click', this.documentClick)
-    },
-
-    destroyed(){
-      document.removeEventListener('click', this.documentClick)
-    },
-
     methods: {
 
       /**
@@ -783,7 +708,9 @@
        * @return {void}
        */
       select(option) {
-        if (!this.isOptionSelected(option)) {
+        if (this.isOptionSelected(option)) {
+          this.deselect(option)
+        } else {
           if (this.taggable && !this.optionExists(option)) {
             option = this.createOption(option)
           }
@@ -797,11 +724,6 @@
           }
         }
 
-        console.log("select")
-        this.arrowClicked = false   // set arrowClicked to false
-        this.countKeyup = 0 //reset keyup counter
-        this.checkBlur = false
-        this.open = false
         this.onAfterSelect(option)
       },
 
@@ -829,9 +751,9 @@
        * Clears the currently selected value(s)
        * @return {void}
        */
-      clearSelection() {
-        this.mutableValue = this.multiple ? [] : null
-      },
+       clearSelection() {
+         this.mutableValue = this.multiple ? [] : null
+       },
 
       /**
        * Called from this.select after each selection.
@@ -840,31 +762,8 @@
        */
       onAfterSelect(option) {
         if (this.closeOnSelect) {
-          //this.open = !this.open
+          this.open = !this.open
           this.$refs.search.blur()
-
-          if(typeof this.mutableValue !== 'undefined' && typeof this.mutableValue === 'object'){
-            //console.log("mutableValue object: "+this.mutableValue)
-            var key = Object.keys(this.valueAsArray[0])
-
-            var lKey
-
-            if(key.length > 1){
-              lKey = key[1];
-            } else {
-              lKey = key[0]
-            }
-
-            //console.log(this.mutableValue);
-            //console.log(key);
-            // console.log("key: "+lKey);
-            // console.log(this.mutableValue[lKey]);
-            // console.log("clearSearchOnSelect: "+this.clearSearchOnSelect)
-            this.search = this.mutableValue[lKey]
-          } else {
-            // console.log("mutableValue non-object: "+this.mutableValue)
-            this.search = this.mutableValue
-          }
         }
 
         if (this.clearSearchOnSelect) {
@@ -878,92 +777,14 @@
        * @return {void}
        */
       toggleDropdown(e) {
-        console.log("toggle Dropdown")
-        if (!this.disabled && !this.taggable) {
-          console.log("toggleDropdown disabled and not taggle")
-          this.open = true           // open dropdown
-          this.arrowClicked = true   // show all options
-          this.$refs.search.focus()  // set clicked input active/focused
-        }
-
-        // taggle don't open drop down on toggle
-        if (this.taggable) {
-          console.log("toggleDropdown taggable")
-          this.open = false
-
-          if(this.arrowClicked){
-            this.arrowClicked = false
-          }
-
-          this.$refs.search.focus()
-        }
-        //console.log(e)
-        //console.log("open: "+this.open)
-/*        if (e.target === this.$refs.search || e.target === this.$refs.toggle || e.target === this.$el) {
+        if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle || e.target === this.$el) {
           if (this.open) {
             this.$refs.search.blur() // dropdown will close on blur
           } else {
-            if (!this.disabled && !this.taggable) {
-              console.log("toggleDropdown disabled and not taggle")
-              this.open = true           // open dropdown
-              this.arrowClicked = true   // show all options
-              this.$refs.search.focus()  // set clicked input active/focused
-            }
-
-            // taggle don't open drop down on toggle
-            if (this.taggable) {
-              console.log("toggleDropdown taggable")
-              this.open = false
+            if (!this.disabled) {
+              this.open = true
               this.$refs.search.focus()
             }
-          }
-        }*/
-      },
-
-      /**
-       * Toggle the visibility of the dropdown menu.
-       * @param  {Event} e
-       * @return {void}
-       */
-      clickDropdown(e) {
-        console.log("click Dropdown")
-        console.log("this.open = "+this.open)
-        console.log("this.arrowClicked = "+this.arrowClicked)
-        this.open = !this.open
-        this.arrowClicked= !this.arrowClicked
-/*        if(this.blur && !this.open && !this.arrowClicked){
-          this.open = true
-          this.arrowClicked = true
-          this.$refs.search.focus()
-        } else if(!this.open && !this.arrowClicked) {
-          this.checkBlur = false
-          this.open = true
-          this.arrowClicked = true
-        } else {
-          this.checkBlur = false
-          this.open = false
-          this.arrowClicked = false
-        }*/
-      },
-
-      /**
-       * Toggle the visibility of the dropdown menu when clicking outside of div.
-       * @param  {Event} e
-       * @return {void}
-       */
-      documentClick(e){
-        let el = this.$refs.vselect
-        let target = e.target
-        //console.log(e.target);
-        if(typeof el !== 'undefined'){
-          if ( (el !== target) && !el.contains(target)) {
-            this.arrowClicked = false
-            this.open = false
-            this.countKeyup = 0
-            //console.log("document clicked outside")
-          } else {
-            //this.arrowClicked = false
-            //console.log("clicked inside")
           }
         }
       },
@@ -998,15 +819,11 @@
        * @return {void}
        */
       onEscape() {
-        //console.log("onEscape")
         if (!this.search.length) {
-          //console.log("blank")
           this.$refs.search.blur()
         } else {
-          //this.search = ''
+          this.search = ''
         }
-
-        this.$emit('search:focus')
       },
 
       /**
@@ -1015,13 +832,10 @@
        * @return {void}
        */
       onSearchBlur() {
-        console.log("onSearchBlur")
         if (this.clearSearchOnBlur) {
-          //this.search = ''
-          //console.log("onSearchBlur")
+          this.search = ''
         }
         this.open = false
-        this.arrowClicked = false
         this.$emit('search:blur')
       },
 
@@ -1031,91 +845,8 @@
        * @return {void}
        */
       onSearchFocus() {
-/*        if(this.arrowClicked){
-          console.log("onSearchFocus arrowClicked is true")
-          if(!this.taggable) {
-            this.$emit('search:focus')
-          }
-          this.open = true
-        } else {
-          if(!this.taggable){
-            console.log("onSearchFocus open")
-            this.open = true
-            this.arrowClicked = true //show all options
-          } else {
-            this.open = false
-            this.arrowClicked = false
-          }
-        }*/
-
-
-        if(this.taggable){
-          if(this.arrowClicked){
-            this.open = true
-          } else {
-            this.open = false
-          }
-          //this.arrowClicked = !this.arrowClicked
-          //this.$emit('search:focus')
-        } else {
-          //console.log("onSearchFocus not taggable")
-
-          if(this.arrowClicked){
-            this.open = true
-            this.arrowClicked = true
-          } else {
-            this.open = false
-            this.arrowClicked = false
-          }
-          //this.open = true
-          //this.arrowClicked = true  //this will show all options
-          this.$emit('search:focus')
-        }
-      },
-
-      /**
-       * Open the dropdown on keyup.
-       * @emits  {search:keyup}
-       * @return {void}
-       */
-      onSearchKeyUp(e) {
-        var ctrlDown = false
-        var ctrlKey = 17  //control
-        var comKey = 91  //control
-        var cKey = 67     // c
-        var saveKeyPressed = this.keyPressed
-        var nextKeyPressed = e.keyCode
-
-        this.keyPressed = nextKeyPressed
-        this.countKeyup = this.countKeyup+1
-
-        //console.log(e)
-        //console.log(this.countKeyup)
-
-/*        console.log(e.keyCode);
-        if(e.keyCode == comKey || e.keyCode == ctrlKey){
-          if(e.keyCode == cKey){
-            console.log("copy")
-            ctrlDown = true
-          }
-        }
-
-        if(ctrlDown === false){
-          console.log("Not copying")
-          this.open = true
-          this.arrowClicked = false
-        }*/
-        if(this.countKeyup > 0){
-          this.open = true
-          //this.arrowClicked = false
-        }
-        //this.$emit('search:focus')
-
-/*        if(ctrlDown === false){
-          console.log("Not copying")
-          this.open = true
-          this.arrowClicked = false
-        }*/
+        this.open = true
+        this.$emit('search:focus')
       },
 
       /**
@@ -1232,52 +963,10 @@
         if (!this.filterable && !this.taggable) {
           return this.mutableOptions.slice()
         }
-        //var options = this.mutableOptions
-
-        var options
-
-        console.log("search length: "+this.search.length)
-
-        if(this.arrowClicked){
-          if(this.taggable){
-            options = this.mutableOptions;
-          } 
-
-          if(!this.taggable && this.countKeyup === 0) {
-            options = this.mutableOptions;
-          } else if (!this.taggable && this.countKeyup > 0){
-            options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-          }
-        } else {
-          options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-          //var options = this.mutableOptions;
-          
-/*          if (this.taggable && this.search.length && !this.optionExists(this.search)) {
-            options.unshift(this.search)
-          }*/
-
+        let options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
+        if (this.taggable && this.search.length && !this.optionExists(this.search)) {
+          options.unshift(this.search)
         }
-
-/*        if(this.arrowClicked){
-          if(this.taggable){
-            options = this.mutableOptions
-          } else {
-            options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-          }
-        } else {
-          if(this.taggable){
-            options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-          } else {
-            options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-            //var options = this.mutableOptions;
-            
-            if (this.taggable && this.search.length && !this.optionExists(this.search)) {
-              options.unshift(this.search)
-            }
-
-          }
-        }*/
-
         return options
       },
 
@@ -1304,7 +993,7 @@
         if (this.multiple) {
           return this.mutableValue
         } else if (this.mutableValue) {
-          return [].concat(this.mutableValue)
+          return [this.mutableValue]
         }
 
         return []
@@ -1315,7 +1004,7 @@
        * @return {Boolean}
        */
       showClearButton() {
-        return !this.multiple && this.clearable && !this.open && this.mutableValue != null
+        return !this.multiple && !this.open && this.mutableValue != null
       }
     },
 

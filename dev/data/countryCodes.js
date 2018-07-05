@@ -243,4 +243,5 @@ export default [
   {value: "YE", label: "Yemen"},
   {value: "ZM", label: "Zambia"},
   {value: "ZW", label: "Zimbabwe"},
+  {value: "ZZ", label: "South Georgia and The South Sandwich Islands South Georgia and The South Sandwich Islands"},
 ];
