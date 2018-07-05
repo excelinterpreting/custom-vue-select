@@ -1,7 +1,7 @@
 <style>
   .v-select {
     position: relative;
-    font-family: sans-serif;
+    font-family: inherit;
   }
 
   .v-select,
@@ -312,14 +312,17 @@
   <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
     <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix']">
 
-      <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
-        <slot name="selected-option" v-bind="option">
-          {{ getOptionLabel(option) }}
-        </slot>
-        <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </span>
+      <slot v-for="option in valueAsArray" name="selected-option-container"
+            :option="(typeof option === 'object')?option:{[label]: option}" :deselect="deselect" :multiple="multiple" :disabled="disabled">
+        <span class="selected-tag" v-bind:key="option.index">
+          <slot name="selected-option" v-bind="(typeof option === 'object')?option:{[label]: option}">
+            {{ getOptionLabel(option) }}
+          </slot>
+          <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </span>
+    </slot>
 
       <input
               ref="search"
@@ -333,7 +336,7 @@
               @focus="onSearchFocus"
               type="search"
               class="form-control"
-              autocomplete="false"
+              autocomplete="off"
               :disabled="disabled"
               :placeholder="searchPlaceholder"
               :tabindex="tabindex"
@@ -365,7 +368,7 @@
       <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
         <li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
           <a @mousedown.prevent="select(option)">
-          <slot name="option" v-bind="option">
+          <slot name="option" v-bind="(typeof option === 'object')?option:{[label]: option}">
             {{ getOptionLabel(option) }}
           </slot>
           </a>
@@ -418,6 +421,15 @@
       disabled: {
         type: Boolean,
         default: false
+      },
+
+      /**
+       * Can the user clear the selected property?
+       * @type {Boolean}
+       */
+      clearable: {
+        type: Boolean,
+        default: true
       },
 
       /**
@@ -507,6 +519,13 @@
         type: Function,
         default(option) {
           if (typeof option === 'object') {
+            if (!option.hasOwnProperty(this.label)) {
+              return console.warn(
+                `[vue-select warn]: Label key "option.${this.label}" does not` +
+                ` exist in options object ${JSON.stringify(option)}.\n` +
+                'http://sagalbot.github.io/vue-select/#ex-labels'
+              )
+            }
             if (this.label && option[this.label]) {
               return option[this.label]
             }
@@ -566,6 +585,47 @@
       filterable: {
         type: Boolean,
         default: true
+      },
+
+      /**
+       * Callback to determine if the provided option should
+       * match the current search text. Used to determine
+       * if the option should be displayed.
+       * @type   {Function}
+       * @param  {Object || String} option
+       * @param  {String} label
+       * @param  {String} search
+       * @return {Boolean}
+       */
+      filterBy: {
+        type: Function,
+        default(option, label, search) {
+          return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1
+        }
+      },
+
+      /**
+       * Callback to filter results when search text
+       * is provided. Default implementation loops
+       * each option, and returns the result of
+       * this.filterBy.
+       * @type   {Function}
+       * @param  {Array} list of options
+       * @param  {String} search text
+       * @param  {Object} vSelect instance
+       * @return {Boolean}
+       */
+      filter: {
+        "type": Function,
+        default(options, search) {
+          return options.filter((option) => {
+            let label = this.getOptionLabel(option)
+            if (typeof label === 'number') {
+              label = label.toString()
+            }
+            return this.filterBy(option, label, search)
+          });
+        }
       },
 
       /**
@@ -708,9 +768,7 @@
        * @return {void}
        */
       select(option) {
-        if (this.isOptionSelected(option)) {
-          this.deselect(option)
-        } else {
+        if (!this.isOptionSelected(option)) {
           if (this.taggable && !this.optionExists(option)) {
             option = this.createOption(option)
           }
@@ -751,9 +809,9 @@
        * Clears the currently selected value(s)
        * @return {void}
        */
-       clearSelection() {
-         this.mutableValue = this.multiple ? [] : null
-       },
+      clearSelection() {
+        this.mutableValue = this.multiple ? [] : null
+      },
 
       /**
        * Called from this.select after each selection.
@@ -993,7 +1051,7 @@
         if (this.multiple) {
           return this.mutableValue
         } else if (this.mutableValue) {
-          return [this.mutableValue]
+          return [].concat(this.mutableValue)
         }
 
         return []
@@ -1004,7 +1062,7 @@
        * @return {Boolean}
        */
       showClearButton() {
-        return !this.multiple && !this.open && this.mutableValue != null
+        return !this.multiple && this.clearable && !this.open && this.mutableValue != null
       }
     },
 
