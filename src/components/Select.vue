@@ -797,7 +797,7 @@
           }
         }
 
-        console.log("select")
+        //console.log("select")
         this.arrowClicked = false   // set arrowClicked to false
         this.countKeyup = 0 //reset keyup counter
         this.checkBlur = false
@@ -878,9 +878,9 @@
        * @return {void}
        */
       toggleDropdown(e) {
-        console.log("toggle Dropdown")
+        //console.log("toggle Dropdown")
         if (!this.disabled && !this.taggable) {
-          console.log("toggleDropdown disabled and not taggle")
+          //console.log("toggleDropdown disabled and not taggle")
           this.open = true           // open dropdown
           this.arrowClicked = true   // show all options
           this.$refs.search.focus()  // set clicked input active/focused
@@ -888,7 +888,7 @@
 
         // taggle don't open drop down on toggle
         if (this.taggable) {
-          console.log("toggleDropdown taggable")
+          //console.log("toggleDropdown taggable")
           this.open = false
 
           if(this.arrowClicked){
@@ -926,9 +926,9 @@
        * @return {void}
        */
       clickDropdown(e) {
-        console.log("click Dropdown")
-        console.log("this.open = "+this.open)
-        console.log("this.arrowClicked = "+this.arrowClicked)
+        //console.log("click Dropdown")
+        //console.log("this.open = "+this.open)
+        //console.log("this.arrowClicked = "+this.arrowClicked)
         this.open = !this.open
         this.arrowClicked= !this.arrowClicked
 /*        if(this.blur && !this.open && !this.arrowClicked){
@@ -1015,7 +1015,7 @@
        * @return {void}
        */
       onSearchBlur() {
-        console.log("onSearchBlur")
+        //console.log("onSearchBlur")
         if (this.clearSearchOnBlur) {
           //this.search = ''
           //console.log("onSearchBlur")
@@ -1236,7 +1236,7 @@
 
         var options
 
-        console.log("search length: "+this.search.length)
+        //console.log("search length: "+this.search.length)
 
         if(this.arrowClicked){
           if(this.taggable){
