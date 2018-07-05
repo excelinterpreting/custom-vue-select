@@ -961,6 +961,11 @@
             this.open = false
             this.countKeyup = 0
             //console.log("document clicked outside")
+
+            // clear the input if no match found
+            if(!this.taggable && !this.filteredOptions.length){
+              this.search = ''
+            }
           } else {
             //this.arrowClicked = false
             //console.log("clicked inside")
