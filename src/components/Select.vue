@@ -1063,7 +1063,7 @@
        * @return {Boolean}
        */
       showClearButton() {
-        return !this.multiple && this.clearable && !this.open && this.mutableValue != null
+        return !this.multiple && this.clearable && !this.open && this.mutableValue != null && this.mutableValue != ''
       }
     },
 
