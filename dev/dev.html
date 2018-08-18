@@ -77,8 +77,10 @@
                 <em>{{ `${option.author.firstName} ${option.author.lastName}` }}</em>
             </template>
         </v-select> -->
-        <v-select taggable :options="options"></v-select>
         <v-select placeholder="default" :options="options"></v-select>
+        <v-select placeholder="taggable" taggable :options="options"></v-select>
+        <v-select placeholder="select on tab" :select-on-tab="true" :options="options"></v-select>
+        <v-select placeholder="select on tab, taggable" taggable :select-on-tab="true" :options="options"></v-select>
     </div>
 </body>
 

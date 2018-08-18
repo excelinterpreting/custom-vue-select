@@ -122,7 +122,7 @@
     min-width: 160px;
     padding: 5px 0;
     margin: 0;
-    width: 100%;
+    width: 100% !important;
     overflow-y: scroll;
     border: 1px solid rgba(0, 0, 0, .26);
     box-shadow: 0px 3px 6px 0px rgba(0,0,0,.15);
@@ -176,7 +176,7 @@
     opacity: .2;
   }
   .v-select.single.searching:not(.open):not(.loading) input[type="search"] {
-    opacity: .2;
+    opacity: 1;
   }
   /* Search Input */
   .v-select input[type="search"]::-webkit-search-decoration,
@@ -201,8 +201,8 @@
     outline: none;
     margin: 0;
     padding: 0 .5em;
-    width: 10em;
-    max-width: 100%;
+    width: 100% !important;
+    /* max-width: 100%; */
     background: none;
     position: relative;
     box-shadow: none;
@@ -306,17 +306,34 @@
   .fade-leave-to {
     opacity: 0;
   }
+
+  /* hide input */
+  .hide {
+    display: none !important;
+  }
 </style>
 
 <template>
   <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
     <div ref="toggle" :class="['dropdown-toggle', 'clearfix']">
 
-      <slot v-for="option in valueAsArray" name="selected-option-container"
-            :option="(typeof option === 'object')?option:{[label]: option}" :deselect="deselect" :multiple="multiple" :disabled="disabled">
-        <span class="selected-tag" v-bind:key="option.index">
+      <slot v-for="option in valueAsArray"
+            name="selected-option-container"
+            :option="(typeof option === 'object')?option:{[label]: option}"
+            :deselect="deselect"
+            :multiple="multiple"
+            :disabled="disabled">
+        <span v-bind:key="option.index" v-if="spanTag">
           <slot name="selected-option" v-bind="(typeof option === 'object')?option:{[label]: option}">
-            {{ getOptionLabel(option) }}
+            <!-- <label :for="inputId" @click="$refs.search.focus()">{{ getOptionLabel(option) }}</label> -->
+            <input :for="inputId"
+              ref="chosen"
+              type="search"
+              autocomplete="off"
+              :value="getOptionLabel(option)"
+              @focus="onSelectedFocus"
+              @click="$refs.search.focus()"
+            >
           </slot>
           <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
             <span aria-hidden="true">&times;</span>
@@ -329,6 +346,7 @@
               v-model="search"
               @keydown.delete="maybeDeleteValue"
               @keyup.esc="onEscape"
+              @keydown.tab="onTab"
               @keydown.up.prevent="typeAheadUp"
               @keydown.down.prevent="typeAheadDown"
               @keydown.enter.prevent="typeAheadSelect"
@@ -336,12 +354,13 @@
               @focus="onSearchFocus"
               type="search"
               class="form-control"
+              :class="hideInput"
               autocomplete="off"
               :disabled="disabled"
               :placeholder="searchPlaceholder"
-              :tabindex="tabindex"
+              tabindex="tabindex"
               :readonly="!searchable"
-              :style="{ width: isValueEmpty ? '100%' : 'auto' }"
+              :style="{ width: '100%' }"
               :id="inputId"
               aria-label="Search for option"
       >
@@ -352,7 +371,8 @@
         @click="clearSelection"
         type="button" 
         class="clear" 
-        title="Clear selection" 
+        title="Clear selection"
+        tabindex="-1" 
       >
         <span aria-hidden="true">&times;</span>
       </button>
@@ -680,6 +700,14 @@
         type: String,
         default: 'auto'
       },
+      /**
+       * When true, hitting the 'tab' key will select the current select value
+       * @type {Boolean}
+       */
+      selectOnTab: {
+        type: Boolean,
+        default: false
+      }
     },
 
     data() {
@@ -687,7 +715,8 @@
         search: '',
         open: false,
         mutableValue: null,
-        mutableOptions: []
+        mutableOptions: [],
+        spanTag: false
       }
     },
 
@@ -811,6 +840,11 @@
        */
       clearSelection() {
         this.mutableValue = this.multiple ? [] : null
+        this.search = ''
+        this.$refs.search.focus() // open dropdown after selected tag is cleared
+        this.spanTag = false
+        this.typeAheadPointer = -1
+        //setTimeout(() => this.$refs.search.focus(), 500);
       },
 
       /**
@@ -822,6 +856,7 @@
         if (this.closeOnSelect) {
           this.open = !this.open
           this.$refs.search.blur()
+          this.spanTag = true
         }
 
         if (this.clearSearchOnSelect) {
@@ -835,7 +870,7 @@
        * @return {void}
        */
       toggleDropdown(e) {
-        if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle || e.target === this.$el) {
+        if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle || e.target.classList.contains('selected-tag') || e.target === this.$el) {
           if (this.open) {
             this.$refs.search.blur() // dropdown will close on blur
           } else {
@@ -886,15 +921,30 @@
 
       /**
        * Close the dropdown on blur.
+       * Reset pointer to -1
        * @emits  {search:blur}
        * @return {void}
        */
       onSearchBlur() {
+        console.log("onSearchBlur")
         if (this.clearSearchOnBlur) {
-          this.search = ''
+          this.search = this.mutableValue != null ? this.mutableValue.label : '';
+          this.typeAheadPointer = -1 //
         }
         this.open = false
         this.$emit('search:blur')
+      },
+
+      /**
+       * Close the dropdown on blur.
+       * Reset pointer to 0
+       * @emits  {search:blur}
+       * @return {void}
+       */
+      onSelectedBlur() {
+        console.log("onSelectedBlur")
+        this.open = false
+        //this.$refs.chosen.blur()
       },
 
       /**
@@ -903,8 +953,33 @@
        * @return {void}
        */
       onSearchFocus() {
+        console.log("onSearchFocus")
         this.open = true
         this.$emit('search:focus')
+      },
+
+      /**
+       * Open the dropdown on focus.
+       * @emits  {search:focus}
+       * @return {void}
+       */
+      onSelectedFocus() {
+        console.log("onSelectedFocus")
+        /* set search to current value */
+        if(this.mutableValue != null){
+          if(this.mutableValue != ''){
+            this.search = this.mutableValue.label
+          } else {
+            this.search = ''
+          }
+          //this.mutableValue = ''
+        } else {
+          this.mutableValue = ''
+          this.search = ''
+        }
+        this.spanTag = false
+        this.open = true
+        //this.$emit('chosen:blur')
       },
 
       /**
@@ -913,8 +988,20 @@
        * @return {this.value}
        */
       maybeDeleteValue() {
-        if (!this.$refs.search.value.length && this.mutableValue) {
-          return this.multiple ? this.mutableValue.pop() : this.mutableValue = null
+        //if (!this.$refs.search.value.length && this.mutableValue) {
+        if (this.mutableValue) {
+          this.mutableValue = null
+          this.typeAheadPointer = -1
+        }
+      },
+
+       /**
+       * Select the current value if selectOnTab is enabled
+       * @return {void}
+       */
+      onTab() {
+        if (this.selectOnTab) {
+          this.typeAheadSelect();
         }
       },
 
@@ -973,6 +1060,17 @@
       },
 
       /**
+       * Classes to be output on .dropdown
+       * @return {Object}
+       */
+      hideInput(){
+        return {
+          //hide: this.mutableValue != null
+          hide: this.spanTag == true
+        }
+      },
+
+      /**
        * If search text should clear on blur
        * @return {Boolean} True when single and clearSearchOnSelect
        */
@@ -1022,7 +1120,7 @@
           return this.mutableOptions.slice()
         }
         let options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-        if (this.taggable && this.search.length > 2 && !this.optionExists(this.search)) {
+        if (this.taggable && this.search.length > 10 && !this.optionExists(this.search)) {
           options.unshift(this.search)
         }
         return options
@@ -1062,7 +1160,7 @@
        * @return {Boolean}
        */
       showClearButton() {
-        return !this.multiple && this.clearable && !this.open && this.mutableValue != null && this.mutableValue != ''
+        return !this.multiple && this.clearable && !this.open && this.mutableValue != '' && (this.mutableValue != null ? (this.mutableValue.value == '' ? false : true) : false)
       }
     },
 
