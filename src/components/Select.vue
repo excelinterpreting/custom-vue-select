@@ -549,7 +549,6 @@
               return option[this.label]
             }
           }
-          console.log(option)
           return option;
         }
       },
