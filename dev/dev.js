@@ -22,7 +22,8 @@ new Vue({
   },
   computed: {
     getCountry(){
-      var x = {value: "DZ", label: "Algeria"}
+      var x = "Algeria" // give error search.length is undefined
+      //var x = {value: "DZ", label: "Algeria"}
       return x
     }
   },

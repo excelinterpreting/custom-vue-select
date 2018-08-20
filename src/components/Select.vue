@@ -929,7 +929,7 @@
       onSearchBlur() {
         //console.log("onSearchBlur")
         if (this.clearSearchOnBlur) {
-          this.search = this.mutableValue != null ? this.mutableValue.label : '';
+          this.search = this.mutableValue != null ? (typeof(this.mutableValue.label) != 'undefined' ? this.mutableValue.label : this.mutableValue) : '';
           this.typeAheadPointer = -1 //
         }
         this.open = false
@@ -956,7 +956,11 @@
         /* set search to selected value */
         if(this.mutableValue != null){
           if(this.mutableValue != ''){
-            this.search = this.mutableValue.label
+            if(typeof(this.mutableValue.label) != 'undefined'){
+              this.search = this.mutableValue.label
+            } else {
+              this.search = this.mutableValue
+            }
           } else {
             this.search = ''
           }
