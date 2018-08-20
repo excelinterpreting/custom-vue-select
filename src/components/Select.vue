@@ -332,7 +332,6 @@
               autocomplete="off"
               :value="getOptionLabel(option)"
               @focus="onSelectedFocus"
-              @click="$refs.search.focus()"
             >
           </slot>
           <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
@@ -926,7 +925,7 @@
        * @return {void}
        */
       onSearchBlur() {
-        console.log("onSearchBlur")
+        //console.log("onSearchBlur")
         if (this.clearSearchOnBlur) {
           this.search = this.mutableValue != null ? this.mutableValue.label : '';
           this.typeAheadPointer = -1 //
@@ -936,50 +935,42 @@
       },
 
       /**
-       * Close the dropdown on blur.
-       * Reset pointer to 0
-       * @emits  {search:blur}
-       * @return {void}
-       */
-      onSelectedBlur() {
-        console.log("onSelectedBlur")
-        this.open = false
-        //this.$refs.chosen.blur()
-      },
-
-      /**
        * Open the dropdown on focus.
        * @emits  {search:focus}
        * @return {void}
        */
       onSearchFocus() {
-        console.log("onSearchFocus")
         this.open = true
         this.$emit('search:focus')
       },
 
       /**
        * Open the dropdown on focus.
+       * Switch focus to search input.
        * @emits  {search:focus}
        * @return {void}
        */
       onSelectedFocus() {
-        console.log("onSelectedFocus")
-        /* set search to current value */
+        /* set search to selected value */
         if(this.mutableValue != null){
           if(this.mutableValue != ''){
             this.search = this.mutableValue.label
           } else {
             this.search = ''
           }
-          //this.mutableValue = ''
         } else {
           this.mutableValue = ''
           this.search = ''
         }
-        this.spanTag = false
+
+        /* set focus on search input */
+        if(this.spanTag){
+          this.spanTag = false
+          this.$nextTick(function(){
+            this.$refs.search.focus();
+          })
+        }
         this.open = true
-        //this.$emit('chosen:blur')
       },
 
       /**

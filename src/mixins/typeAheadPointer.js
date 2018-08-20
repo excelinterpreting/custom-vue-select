@@ -6,8 +6,17 @@ module.exports = {
   },
 
   watch: {
+    /**
+     * Highlight row option only if search.length is greater
+     * than 0.
+     * @return {void}
+     */
     filteredOptions() {
-      this.typeAheadPointer = 0
+      if(this.search.length > 0){
+        this.typeAheadPointer = 0;
+      } else {
+        this.typeAheadPointer = -1
+      }
     }
   },
 
@@ -18,7 +27,6 @@ module.exports = {
      * @return {void}
      */
     typeAheadUp() {
-      console.log(this.typeAheadPointer);
       if (this.typeAheadPointer > 0) {
         this.typeAheadPointer--
         if( this.maybeAdjustScroll ) {
@@ -33,7 +41,6 @@ module.exports = {
      * @return {void}
      */
     typeAheadDown() {
-      console.log(this.typeAheadPointer);
       if (this.typeAheadPointer < this.filteredOptions.length - 1) {
         this.typeAheadPointer++
         if( this.maybeAdjustScroll ) {
