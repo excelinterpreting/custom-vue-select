@@ -18,7 +18,13 @@ new Vue({
     options: countries,
     ajaxRes: [],
     people: [],
-    fuseSearchOptions
+    fuseSearchOptions,
+  },
+  computed: {
+    getCountry(){
+      var x = {value: "DZ", label: "Algeria"}
+      return x
+    }
   },
   methods: {
     search(search, loading) {

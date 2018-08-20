@@ -12,11 +12,15 @@ module.exports = {
      * @return {void}
      */
     filteredOptions() {
-      if(this.search != 'undefined' && this.search.length > 0){
-        this.typeAheadPointer = 0;
+      if(this.search != 'undefined'){
+        if (this.search.length > 0){
+          this.typeAheadPointer = 0;
+        } else {
+          this.typeAheadPointer = -1
+        }
       } else {
-        this.typeAheadPointer = -1
-      }
+        this.typeAheadPointer = 0;
+      } 
     }
   },
 

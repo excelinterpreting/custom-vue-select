@@ -549,6 +549,7 @@
               return option[this.label]
             }
           }
+          console.log(option)
           return option;
         }
       },
@@ -786,6 +787,8 @@
       this.mutableLoading = this.loading
 
       this.$on('option:created', this.maybePushTag)
+
+      this.spanTag = this.mutableValue != null  // set spanTag to true if mutableValue is not null
     },
 
     methods: {
