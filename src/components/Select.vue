@@ -208,7 +208,7 @@
     box-shadow: none;
   }
   .v-select.unsearchable input[type="search"] {
-    opacity: 0;
+    opacity: 1;
   }
   .v-select.unsearchable input[type="search"]:hover {
     cursor: pointer;
@@ -905,7 +905,7 @@
                 this.$refs.search.focus();
               })
             }
-          
+
           }
         }
 
@@ -1104,7 +1104,7 @@
           single: !this.multiple,
           searching: this.searching,
           searchable: this.searchable,
-          unsearchable: !this.searchable,
+          unsearchable: !this.filterable,
           loading: this.mutableLoading,
           rtl: this.dir === 'rtl',
           disabled: this.disabled
