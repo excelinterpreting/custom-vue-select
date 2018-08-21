@@ -880,6 +880,7 @@
           if(!this.disabled){
             //this.open = true
             this.$refs.search.focus()
+            this.$refs.search.select();
             this.open = true
 
             if(this.mutableValue != null){
@@ -903,6 +904,7 @@
               this.spanTag = false
               this.$nextTick(function(){
                 this.$refs.search.focus();
+                this.$refs.search.select();
               })
             }
 
@@ -1029,6 +1031,7 @@
           this.spanTag = false
           this.$nextTick(function(){
             this.$refs.search.focus();
+            this.$refs.search.select();
           })
         }
         this.open = true
