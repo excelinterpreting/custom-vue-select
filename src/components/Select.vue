@@ -358,7 +358,7 @@
               :disabled="disabled"
               :placeholder="searchPlaceholder"
               tabindex="tabindex"
-              :readonly="!searchable"
+              :readonly="!filterable"
               :style="{ width: '100%' }"
               :id="inputId"
               aria-label="Search for option"
@@ -393,7 +393,7 @@
           </a>
         </li>
         <li v-if="!filteredOptions.length" class="no-options">
-          <slot name="no-options">Sorry, no matching options.</slot>
+          <slot name="no-options">No match found.</slot>
         </li>
       </ul>
     </transition>
@@ -871,16 +871,29 @@
        * @return {void}
        */
       toggleDropdown(e) {
-        if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle || e.target.classList.contains('selected-tag') || e.target === this.$el) {
-          if (this.open) {
-            this.$refs.search.blur() // dropdown will close on blur
-          } else {
-            if (!this.disabled) {
-              this.open = true
-              this.$refs.search.focus()
-            }
+        if(this.open){
+          this.$refs.search.blur()
+          this.spanTag = this.mutableValue == null ? false : true
+          this.open = false
+        } else {
+          if(!this.disabled){
+            //this.open = true
+            //this.$refs.search.focus()
+            this.onSelectedFocus()
           }
         }
+
+
+        // if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle || e.target.classList.contains('selected-tag') || e.target === this.$el) {
+        //   if (this.open) {
+        //     this.$refs.search.blur() // dropdown will close on blur
+        //   } else {
+        //     if (!this.disabled) {
+        //       this.open = true
+        //       this.$refs.search.focus()
+        //     }
+        //   }
+        // }
       },
 
       /**
@@ -927,9 +940,8 @@
        * @return {void}
        */
       onSearchBlur() {
-        //console.log("onSearchBlur")
         if (this.clearSearchOnBlur) {
-          this.search = this.mutableValue != null ? (typeof(this.mutableValue.label) != 'undefined' ? this.mutableValue.label : this.mutableValue) : '';
+          this.search = this.mutableValue != null ? (typeof(this.mutableValue) == 'object' ? this.mutableValue[this.label] : this.mutableValue) : '';
           this.typeAheadPointer = -1 //
         }
         this.open = false
@@ -956,8 +968,8 @@
         /* set search to selected value */
         if(this.mutableValue != null){
           if(this.mutableValue != ''){
-            if(typeof(this.mutableValue.label) != 'undefined'){
-              this.search = this.mutableValue.label
+            if(typeof(this.mutableValue) == 'object'){
+              this.search = this.mutableValue[this.label]
             } else {
               this.search = this.mutableValue
             }
@@ -965,7 +977,7 @@
             this.search = ''
           }
         } else {
-          this.mutableValue = ''
+          this.mutableValue = null
           this.search = ''
         }
 
@@ -1113,6 +1125,7 @@
        * @return {array}
        */
       filteredOptions() {
+        //console.log(this.mutableOptions.slice()) //shows all options
         if (!this.filterable && !this.taggable) {
           return this.mutableOptions.slice()
         }

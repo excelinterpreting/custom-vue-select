@@ -19,12 +19,17 @@ new Vue({
     ajaxRes: [],
     people: [],
     fuseSearchOptions,
+    gender: [
+        {value: "M", gender: "Male"},
+        {value: "F", gender: "Female"}
+    ]
   },
   computed: {
     getCountry(){
-      var x = "Algeria" // give error search.length is undefined
-      //var x = {value: "DZ", label: "Algeria"}
-      return x
+      return "Algeria"
+    },
+    getGender(){
+      return "Male"
     }
   },
   methods: {
@@ -37,7 +42,7 @@ new Vue({
       this.getPeople(loading, this)
     },
     getPeople: debounce((loading, vm) => {
-      vm.$http.get(`https://reqres.in/api/users?per_page=10`).then(res => {
+      vm.$http.get(`https://reqres.in/api/users?per_page=12`).then(res => {
         vm.people = res.data.data
         loading(false)
       })
