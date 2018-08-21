@@ -881,7 +881,7 @@
             //this.open = true
             this.$refs.search.focus()
             this.open = true
-            
+
             if(this.mutableValue != null){
               if(this.mutableValue != ''){
                 if(typeof(this.mutableValue) == 'object'){
@@ -1108,7 +1108,7 @@
       hideInput(){
         return {
           //hide: this.mutableValue != null
-          hide: this.spanTag == true
+          hide: this.spanTag == true && this.mutableValue != ''
         }
       },
 
