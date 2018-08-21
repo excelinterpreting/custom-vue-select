@@ -1,6 +1,6 @@
 {
   "name": "custom-vue-select",
-  "version": "2.4.19",
+  "version": "2.4.20",
   "description": "This is a custom vue-select fork of https://sagalbot.github.io/vue-select/",
   "author": "Kao Saetern <kaos@unlockdsolutions.com>",
   "private": false,

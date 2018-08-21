@@ -26,7 +26,7 @@ new Vue({
   },
   computed: {
     getCountry(){
-      return ""
+      return "Algeria"
     },
     getGender(){
       return "Male"

@@ -896,6 +896,16 @@
               this.mutableValue = null
               this.search = ''
             }
+
+
+            /* set focus on search input */
+            if(this.spanTag){
+              this.spanTag = false
+              this.$nextTick(function(){
+                this.$refs.search.focus();
+              })
+            }
+          
           }
         }
 
