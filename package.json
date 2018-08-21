@@ -1,8 +1,8 @@
 {
   "name": "custom-vue-select",
-  "version": "2.4.17",
-  "description": "A native Vue.js component that provides similar functionality to Select2 without the overhead of jQuery.",
-  "author": "Jeff Sagal <sagalbot@gmail.com>",
+  "version": "2.4.18",
+  "description": "This is a custom vue-select fork of https://sagalbot.github.io/vue-select/",
+  "author": "Kao Saetern <kaos@unlockdsolutions.com>",
   "private": false,
   "main": "dist/vue-select.js",
   "license": "MIT",

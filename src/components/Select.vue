@@ -35,7 +35,7 @@
     display: inline-block;
     cursor: pointer;
     pointer-events: all;
-    transition: all 150ms cubic-bezier(1.000, -0.115, 0.975, 0.855);
+    transition: all 1ms cubic-bezier(1.000, -0.115, 0.975, 0.855);
     transition-timing-function: cubic-bezier(1.000, -0.115, 0.975, 0.855);
     opacity: 1;
     height: 20px; width: 10px;
@@ -50,7 +50,7 @@
     width: 10px;
     vertical-align: top;
     transform: rotate(133deg);
-    transition: all 150ms cubic-bezier(1.000, -0.115, 0.975, 0.855);
+    transition: all 1ms cubic-bezier(1.000, -0.115, 0.975, 0.855);
     transition-timing-function: cubic-bezier(1.000, -0.115, 0.975, 0.855);
     box-sizing: inherit;
   }
@@ -619,6 +619,7 @@
       filterBy: {
         type: Function,
         default(option, label, search) {
+          //console.log(search)
           return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1
         }
       },
@@ -878,8 +879,23 @@
         } else {
           if(!this.disabled){
             //this.open = true
-            //this.$refs.search.focus()
-            this.onSelectedFocus()
+            this.$refs.search.focus()
+            this.open = true
+            
+            if(this.mutableValue != null){
+              if(this.mutableValue != ''){
+                if(typeof(this.mutableValue) == 'object'){
+                  this.search = this.mutableValue[this.label]
+                } else {
+                  this.search = this.mutableValue
+                }
+              } else {
+                this.search = ''
+              }
+            } else {
+              this.mutableValue = null
+              this.search = ''
+            }
           }
         }
 
@@ -944,8 +960,25 @@
           this.search = this.mutableValue != null ? (typeof(this.mutableValue) == 'object' ? this.mutableValue[this.label] : this.mutableValue) : '';
           this.typeAheadPointer = -1 //
         }
+
+        if(this.mutableValue != null){
+          this.spanTag = true
+        } else{
+          this.spanTag = false
+        }
+
         this.open = false
         this.$emit('search:blur')
+      },
+
+      /**
+       * Close the dropdown on blur.
+       * Reset pointer to -1
+       * @emits  {search:blur}
+       * @return {void}
+       */
+      onSelectedBlur() {
+        console.log("on selected blur")
       },
 
       /**
