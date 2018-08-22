@@ -843,10 +843,14 @@
       clearSelection() {
         this.mutableValue = this.multiple ? [] : null
         this.search = ''
-        this.$refs.search.focus() // open dropdown after selected tag is cleared
+        this.open = true
         this.spanTag = false
         this.typeAheadPointer = -1
-        //setTimeout(() => this.$refs.search.focus(), 500);
+
+        this.$nextTick(function(){
+          this.$refs.search.focus();
+          this.$refs.search.select();
+        })
       },
 
       /**
