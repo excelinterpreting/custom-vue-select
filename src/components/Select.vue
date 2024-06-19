@@ -385,7 +385,13 @@
 
     <transition :name="transition">
       <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
-        <li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
+        <li
+          role="option"
+          v-for="(option, index) in filteredOptions" 
+          :key="index" 
+          :id="`option-${index}`"
+          :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" 
+          @mouseover="typeAheadPointer = index">
           <a @mousedown.prevent="select(option)">
           <slot name="option" v-bind="(typeof option === 'object')?option:{[label]: option}">
             {{ getOptionLabel(option) }}
@@ -1014,6 +1020,7 @@
        * @return {void}
        */
       onSelectedFocus() {
+        console.log("onSelectedFocus")
         /* set search to selected value */
         if(this.mutableValue != null){
           if(this.mutableValue != ''){
