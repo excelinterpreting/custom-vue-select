@@ -6,40 +6,62 @@ module.exports = {
   },
 
   watch: {
+    /**
+     * Highlight row option only if search.length is greater
+     * than 0.
+     * @return {void}
+     */
     filteredOptions() {
-      const { search } = this;
-      this.typeAheadPointer = search.length > 0 ? 0 : -1;
+      if (this.search.length > 0){
+        this.typeAheadPointer = 0;
+      } else {
+        this.typeAheadPointer = -1
+      }
     }
   },
 
   methods: {
+    /**
+     * Move the typeAheadPointer visually up the list by
+     * subtracting the current index by one.
+     * @return {void}
+     */
     typeAheadUp() {
       if (this.typeAheadPointer > 0) {
-        this.typeAheadPointer--;
-        if (this.maybeAdjustScroll) {
-          this.maybeAdjustScroll();
+        this.typeAheadPointer--
+        if( this.maybeAdjustScroll ) {
+          this.maybeAdjustScroll()
         }
       }
     },
 
+    /**
+     * Move the typeAheadPointer visually down the list by
+     * adding the current index by one.
+     * @return {void}
+     */
     typeAheadDown() {
       if (this.typeAheadPointer < this.filteredOptions.length - 1) {
-        this.typeAheadPointer++;
-        if (this.maybeAdjustScroll) {
-          this.maybeAdjustScroll();
+        this.typeAheadPointer++
+        if( this.maybeAdjustScroll ) {
+          this.maybeAdjustScroll()
         }
       }
     },
 
+    /**
+     * Select the option at the current typeAheadPointer position.
+     * Optionally clear the search input on selection.
+     * @return {void}
+     */
     typeAheadSelect() {
-      const { typeAheadPointer, filteredOptions, search } = this;
-      if (filteredOptions[typeAheadPointer]) {
-        this.select(filteredOptions[typeAheadPointer]);
-      } else if (this.taggable && search.length) {
-        this.select(search);
+      if( this.filteredOptions[ this.typeAheadPointer ] ) {
+        this.select( this.filteredOptions[ this.typeAheadPointer ] );
+      } else if (this.taggable && this.search.length){
+        this.select(this.search)
       }
 
-      if (this.clearSearchOnSelect) {
+      if( this.clearSearchOnSelect ) {
         this.search = "";
       }
     },
