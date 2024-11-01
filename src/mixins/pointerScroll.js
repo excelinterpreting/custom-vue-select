@@ -15,13 +15,13 @@ module.exports = {
      * @returns {*}
      */
     maybeAdjustScroll() {
-      let pixelsToPointerTop = this.pixelsToPointerTop()
-      let pixelsToPointerBottom = this.pixelsToPointerBottom()
+      const pixelsToPointerTop = this.pixelsToPointerTop();
+      const pixelsToPointerBottom = this.pixelsToPointerBottom();
 
-      if ( pixelsToPointerTop <= this.viewport().top) {
-        return this.scrollTo( pixelsToPointerTop )
+      if (pixelsToPointerTop <= this.viewport().top) {
+        return this.scrollTo(pixelsToPointerTop);
       } else if (pixelsToPointerBottom >= this.viewport().bottom) {
-        return this.scrollTo( this.viewport().top + this.pointerHeight() )
+        return this.scrollTo(this.viewport().top + this.pointerHeight());
       }
     },
 
@@ -75,7 +75,12 @@ module.exports = {
      * @returns {*}
      */
     scrollTo(position) {
-      return this.$refs.dropdownMenu ? this.$refs.dropdownMenu.scrollTop = position : null
+      if (this.$refs.dropdownMenu) {
+        requestAnimationFrame(() => {
+          this.$refs.dropdownMenu.scrollTop = position;
+        });
+      }
+      return null;
     },
   }
 }
